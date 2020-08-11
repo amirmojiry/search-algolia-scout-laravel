@@ -10,91 +10,68 @@
         <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
 
         <!-- Styles -->
-        <style>
-            html, body {
-                background-color: #fff;
-                color: #636b6f;
-                font-family: 'Nunito', sans-serif;
-                font-weight: 200;
-                height: 100vh;
-                margin: 0;
-            }
 
-            .full-height {
-                height: 100vh;
-            }
+        <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.0.0/dist/algoliasearch-lite.umd.js" integrity="sha256-MfeKq2Aw9VAkaE9Caes2NOxQf6vUa8Av0JqcUXUGkd0=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.0.0/dist/instantsearch.production.min.js" integrity="sha256-6S7q0JJs/Kx4kb/fv0oMjS855QTz5Rc2hh9AkIUjUsk=" crossorigin="anonymous"></script>
 
-            .flex-center {
-                align-items: center;
-                display: flex;
-                justify-content: center;
-            }
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/instantsearch.css@7.3.1/themes/algolia-min.css" integrity="sha256-HB49n/BZjuqiCtQQf49OdZn63XuKFaxcIHWf0HNKte8=" crossorigin="anonymous">
 
-            .position-ref {
-                position: relative;
-            }
-
-            .top-right {
-                position: absolute;
-                right: 10px;
-                top: 18px;
-            }
-
-            .content {
-                text-align: center;
-            }
-
-            .title {
-                font-size: 84px;
-            }
-
-            .links > a {
-                color: #636b6f;
-                padding: 0 25px;
-                font-size: 13px;
-                font-weight: 600;
-                letter-spacing: .1rem;
-                text-decoration: none;
-                text-transform: uppercase;
-            }
-
-            .m-b-md {
-                margin-bottom: 30px;
-            }
-        </style>
     </head>
     <body>
-        <div class="flex-center position-ref full-height">
-            @if (Route::has('login'))
-                <div class="top-right links">
-                    @auth
-                        <a href="{{ url('/home') }}">Home</a>
-                    @else
-                        <a href="{{ route('login') }}">Login</a>
 
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}">Register</a>
-                        @endif
-                    @endauth
-                </div>
-            @endif
+        <div id="searchbox" style="padding:8px"></div>
+        <div id="range-slider"></div>
+        <div id="hits" style="padding:8px"></div>
+        <div id="pagination"></div>
 
-            <div class="content">
-                <div class="title m-b-md">
-                    Laravel
-                </div>
+        <script type="text/javascript">
 
-                <div class="links">
-                    <a href="https://laravel.com/docs">Docs</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://blog.laravel.com">Blog</a>
-                    <a href="https://nova.laravel.com">Nova</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://vapor.laravel.com">Vapor</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
-                </div>
-            </div>
-        </div>
+            const searchClient = algoliasearch(
+                '{{config("scout.algolia.id")}}', 
+                '{{Algolia\ScoutExtended\Facades\Algolia::searchKey(App\Product::class)}}'
+            );
+
+            const search = instantsearch({
+                indexName: 'products',
+                searchClient,
+                routing: {
+                    stateMapping: instantsearch.stateMappings.simple(),
+                },
+                });
+
+            search.addWidgets([
+                instantsearch.widgets.searchBox({
+                    container: '#searchbox',
+                }),
+
+                instantsearch.widgets.hits({
+                    container: '#hits',
+                    templates: {
+                        item: `
+                            <h2>@{{title}}</h2>
+                            <p>@{{description}}</p>
+                            <strong>@{{price}}$</strong>
+                        `
+                    },
+                }),
+                instantsearch.widgets.pagination({
+                    container: '#pagination',
+                }),
+
+                instantsearch.widgets.rangeSlider({
+                    container: '#range-slider',
+                    attribute: 'price',
+                    min: 0,
+                    max: 100,
+                }),
+
+                instantsearch.widgets.configure({
+                    hitsPerPage: 8,
+                }),
+
+            ]);
+
+            search.start();
+        </script>
     </body>
 </html>
